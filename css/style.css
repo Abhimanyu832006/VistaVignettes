@@ -1,0 +1,329 @@
+html, body {
+    background-color: #b2c7a2; /* Your chosen background color */
+    margin: 0; /* Remove default browser margins */
+    padding: 0; /* Remove default browser padding */
+    font-family: 'Inter', sans-serif; /* Your chosen font family */
+    color: #333; /* Default text color */
+    line-height: 1.6; /* Line height for readability */
+    box-sizing: border-box; /* Ensures padding/border are included in element's total size */
+}
+
+/* Inherit box-sizing for all elements for consistent layout behavior */
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* General link styling (applies to all <a> tags unless overridden by more specific rules) */
+a {
+    text-decoration: none; /* Removes underlines from all links */
+    color: #333; /* Default link color */
+    transition: color 0.3s ease; /* Smooth color transition on hover */
+}
+
+a:hover {
+    color: #000000; /* Darker color on hover for general links */
+}
+
+/* Duplicate body rule - kept as is, but typically merged with html, body */
+body {
+    font-family: Arial, sans-serif; /* This will override 'Inter' if placed after html,body */
+    color: #333; /* Redundant, already set in html,body */
+}
+
+/* Main content container for consistent margins */
+.container {
+    max-width: 1800px; /* Your chosen max-width */
+    margin: 0 auto; /* Centers the container horizontally */
+    padding: 0 20px; /* Adds horizontal padding for smaller screens */
+}
+
+
+/* ===========================
+ * 2. Header Section
+ * =========================== */
+
+header {
+    display: flex; /* Enables Flexbox for horizontal alignment of children */
+    justify-content: space-between; /* Distributes space between logo, nav, search */
+    align-items: center; /* Vertically centers items in the header */
+    padding: 20px 0; /* Vertical padding */
+    border-bottom: 1px solid #eee; /* Subtle bottom border */
+    margin-bottom: 70px; /* Space below the header */
+}
+
+/* Logo container styling */
+.logo {
+    cursor: pointer; /* Indicates it's clickable */
+    text-decoration: none; /* Removes underline (though logo h1 overrides) */
+    color: #555; /* Color (likely overridden by h1) */
+    font-weight: 500; /* Font weight (likely overridden by h1) */
+    transition: color 0.3s ease; /* Transition (likely overridden by h1) */
+    font-size: 25px; /* Font size (likely overridden by h1) */
+    letter-spacing: 0.8px; /* Letter spacing (likely overridden by h1) */
+
+    /* Glassmorphism styles applied to the .logo div itself */
+    background-color: rgba(255, 255, 255, 0.147);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 15px 27px rgba(0, 0, 0, 0.507);
+    transition: all 0.4s ease;
+    padding: 5px 26px;
+    border-radius: 50px;
+}
+
+/* Logo container hover effect */
+.logo:hover {
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.88); /* Your specific hover shadow */
+}
+
+/* Logo text styling */
+.logo h1 {
+    font-size: 45px; /* Your chosen font size for the logo */
+    margin: 0; /* Remove default h1 margins */
+    color: #222; /* Your chosen logo color */
+    font-weight: 60; /* NOTE: '60' is not a standard font-weight value; typically 100-900. This might render as 'normal'. */
+}
+
+
+/* ===========================
+ * 3. Navigation Bar (Glass Pills)
+ * =========================== */
+
+/* Navigation wrapper (if present in HTML) */
+.navigation-bar {
+    padding: 20px 0; /* Vertical padding for the bar */
+    padding-bottom: 20px; /* Redundant, already set by padding */
+    border-radius: 50px; /* Rounded corners for the bar */
+    background-color: rgba(255, 255, 255, 0.29); /* Translucent background */
+    transition: all 0.4s ease; /* Smooth transition */
+    box-shadow: 0 19px 50px rgba(0, 0, 0, 0.507); /* Your chosen shadow */
+}
+
+/* Navigation bar hover effect */
+.navigation-bar:hover {
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.88); /* Your chosen hover shadow */
+}
+
+/* List container for navigation links */
+nav ul {
+    display: flex; /* Enables Flexbox for horizontal alignment of list items */
+    list-style: none; /* Removes bullet points */
+    font-size: 20px; /* Your chosen font size for the ul (though nav a overrides) */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+}
+
+/* Individual navigation list item spacing */
+nav li {
+    margin: 0 20px; /* Your chosen horizontal spacing between nav items */
+}
+
+/* Styling for individual navigation links (the "glass pills") */
+nav a {
+    text-decoration: none; /* Removes underline */
+    color: #555; /* Your chosen text color for nav links */
+    font-weight: 500; /* Medium font weight */
+    transition: color 0.3s ease; /* Smooth color transition */
+    font-size: 25px; /* Your chosen font size for nav links */
+    letter-spacing: 0.8px; /* Spacing between letters */
+
+    /* Glassmorphism styles for the pills */
+    background-color: rgba(255, 255, 255, 0.147); /* Your chosen translucent background */
+    backdrop-filter: blur(8px); /* The blur effect */
+    -webkit-backdrop-filter: blur(8px); /* Safari compatibility */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Your chosen subtle border */
+    box-shadow: 0 5px 7px rgba(0, 0, 0, 0.46); /* Your chosen shadow for the pill */
+    transition: all 0.4s ease; /* Smooth transition for all properties on hover */
+    padding: 13.5px 26px; /* Your chosen internal padding for the pills */
+    border-radius: 50px; /* Creates the pill shape */
+}
+
+/* Hover effect for navigation pills */
+nav a:hover {
+    color: #000; /* Text color on hover */
+    background-color: rgba(255, 255, 255, 0.22); /* Background color on hover */
+    box-shadow: 0 10px 16px rgba(0, 0, 0, 0.738); /* Your chosen shadow on hover */
+    font-weight: 500; /* Redundant, already set above */
+}
+
+
+/* ===========================
+ * 4. Search Bar
+ * =========================== */
+
+.search-bar {
+    --padding: 15px; /* CSS variable for padding */
+    width: max-content; /* Adjusts width to content */
+    display: flex; /* Enables Flexbox for icon and input */
+    align-items: center; /* Vertically centers icon and input */
+    padding: 14px var(--padding); /* Your chosen internal padding */
+    border-radius: 26px; /* Your chosen border-radius */
+    background-color: transparent; /* Transparent background for the bar itself */
+    transition: box-shadow 0.35s; /* Smooth shadow transition */
+    box-shadow: 0 19px 40px rgba(0, 0, 0, 0.507); /* Your chosen shadow for the bar */
+}
+
+/* Search bar hover effect */
+.search-bar:hover {
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.88); /* Your chosen hover shadow */
+}
+
+/* Search bar focus-within effect (when input/button inside is focused) */
+.search-bar:focus-within {
+    box-shadow: 0 19px 40px rgba(0, 0, 0, 0.797); /* Your chosen focus shadow */
+}
+
+/* Search Icon Button */
+.search-icon-button { 
+    background: transparent; /* No background */
+    border: none; /* No border */
+    cursor: pointer; /* Pointer cursor on hover */
+    display: flex; /* For centering the icon */
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease; /* Smooth color transition */
+}
+
+/* Search Icon Hover Effect */
+.search-icon:hover {
+    color: #000; /* Darker color on hover */
+}
+
+/* Search Input Field */
+.search-input {
+    font-size: 20px; /* Your chosen font size for input text */
+    font-family: Arial, Helvetica, sans-serif; /* Your chosen font family */
+    color: #333; /* Text color inside input */
+    margin-left: 4px; /* Space between icon and text */
+    outline: none; /* Remove default focus outline */
+    border: none; /* Remove default border */
+    padding: 10px 0; /* Vertical padding */
+    padding-left: 7%; /* Your chosen left padding percentage */
+    border-radius: 26px; /* Your chosen border-radius */
+    background-color: #ffffff; /* Your chosen background color for the input field */
+    width: 300px; /* Your chosen fixed width */
+    transition: all 0.3s ease; /* Smooth transition for all properties */
+}
+
+/* Search Input Placeholder and Icon color */
+.search-input::placeholder,
+.search-icon {
+    transition: color 0.3s ease; /* Smooth color transition */
+    color: rgba(0, 0, 0, 0.60); /* Your chosen color */
+}
+
+/* Search Input Focus/Hover Effects */
+.search-input:focus-within,
+.search-input:hover {
+    box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.612); /* Your chosen inner shadow */
+}
+
+
+/* ===========================
+ * 5. Main Content (Image Grid)
+ * =========================== */
+
+.image-grid {
+    display: grid; /* Enables CSS Grid for layout */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid columns */
+    gap: 20px; /* Your chosen gap between grid items */
+    padding: 20px 0; /* Vertical padding */
+}
+
+.image-grid img {
+    width: 100%; /* Image takes full width of its grid cell */
+    height: 100%; /* Image takes full height of its grid cell */
+    object-fit: cover; /* Crops image to fit without distortion */
+    border-radius: 50%; /* Makes the image circular */
+}
+
+
+/* ===========================
+ * 6. Footer Section
+ * =========================== */
+
+footer {
+    display: flex; /* Enables Flexbox for horizontal alignment of sections */
+    justify-content: space-between; /* Distributes space between sections */
+    align-items: flex-start; /* Aligns sections to the top */
+    padding: 40px 0; /* Vertical padding */
+    background-color: #f4f4f4; /* Your chosen footer background color */
+    text-align: left; /* Default text alignment for sections */
+    flex-wrap: wrap; /* Allows sections to wrap to new lines on smaller screens */
+    gap: 20px; /* Your chosen gap between footer sections */
+}
+
+/* Individual footer section padding and growth */
+.footer-section {
+    padding-left: 20px; /* Your chosen left padding */
+    padding-right: 20px; /* Your chosen right padding */
+    padding-top: 20px; /* Your chosen top padding */
+    flex-grow: 1; /* Allows sections to grow and fill space */
+    font-size: large; /* Your chosen font size for footer section content */
+}
+
+/* Footer list styling */
+footer ul {
+    margin-top: 0px; /* Remove default top margin */
+    list-style: none; /* Removes bullet points */
+    padding: 0; /* Remove default padding */
+}
+
+/* Footer heading styling */
+footer h5 {
+    font-size: 16px; /* Your chosen font size for headings */
+    margin-bottom: 0px; /* Remove default bottom margin */
+    letter-spacing: 0.5px; /* Your chosen letter spacing */
+}
+
+/* Copyright section styling */
+footer .copyright {
+    border-top: 1px solid #ddd; /* Your chosen top border */
+    padding: 0 20px; /* Your chosen horizontal padding */
+    text-align: right; /* Aligns text to the right within its container */
+    align-self: flex-end; /* Aligns this section to the bottom of the footer flex container */
+    color: #777; /* Your chosen text color */
+    font-size: 13px; /* Your chosen font size */
+}
+
+/* ===========================
+ * 5. Main Content (Image Grid / Canvas)
+ * =========================== */
+
+/* Ensure main section takes up vertical space */
+/* ===========================
+ * 5. Main Content (Canvas for 3D Sphere)
+ * =========================== */
+
+/* Ensure main section takes up vertical space and centers its content */
+main {
+    padding-top: 1px;
+    display: flex; /* Enables flexbox for centering */
+    justify-content: center; /* Centers content horizontally */
+    align-items: center; /* Centers content vertically */
+    min-height: 500px; /* Give it a minimum height to be visible */
+    width: 100%; /* Ensure main takes full width of its parent (.container) */
+    position: relative; /* Needed if you want to absolutely position elements inside it */
+    margin-bottom: 50px; /* Space above footer */
+    background-color: transparent; /* Ensure no background is hiding canvas */
+    overflow: hidden; /* Important: Prevents scrollbars if content overflows */
+}
+
+/* Styling for the Three.js canvas */
+#threeJsCanvas {
+    padding-top: 1px;
+    display: block; /* Ensures it behaves like a block element */
+    width: 100%; /* Take full width of its parent (main) */
+    height: 100%; /* Give the canvas a fixed height for now */
+    /* TEMPORARY DEBUGGING BORDER: Uncomment this line to see if the canvas itself is visible */
+    /* border: 2px solid red; */
+    background-color: transparent; /* Ensure canvas background is transparent */
+    border-radius: 120px; /* Add some rounded corners for aesthetics */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+}
+
+/* Ensure the old .image-grid styles are not interfering if still present in HTML */
+.image-grid {
+    display: none; /* Hide the old image grid if it's still in HTML */
+}
