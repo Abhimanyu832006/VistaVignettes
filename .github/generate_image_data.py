@@ -1,5 +1,5 @@
 
-# generate_image_data.py
+# generate_image_data.py v2
 import os
 import json
 
