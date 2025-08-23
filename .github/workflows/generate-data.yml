@@ -1,0 +1,62 @@
+# .github/workflows/generate-data.yml
+name: Generate Image Data
+
+# This workflow will run on specific events
+on:
+  # Trigger the workflow when changes are pushed to the 'main' branch
+  push:
+    branches:
+      - main
+    # Only run if files in 'images/' or the script itself change
+    paths:
+      - 'images/**'
+      - '.github/generate_image_data.py'
+      - 'data.json' # Also trigger if data.json is directly modified
+
+  # Allows you to run this workflow manually from the Actions tab in GitHub
+  workflow_dispatch:
+
+jobs:
+  generate-data:
+    runs-on: ubuntu-latest # Use the latest Ubuntu environment on GitHub's servers
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # This token is needed to allow the action to push changes back to the repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 2: Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x' # Use the latest Python 3 version
+
+      # Step 3: Install dependencies (if your script had any, e.g., 'pip install requests')
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Add any other pip installs here if your Python script needed them
+
+      # Step 4: Run the Python script to generate data.json
+      - name: Run data generation script
+        run: python .github/generate_image_data.py
+
+      # Step 5: Check if data.json has changed
+      - name: Check for changes in data.json
+        id: git_status
+        run: echo "changes=$(git status --porcelain data.json)" >> $GITHUB_OUTPUT
+
+      # Step 6: Commit and push data.json if it has changed
+      - name: Commit and push data.json
+        if: ${{ steps.git_status.outputs.changes != '' }} # Only run if data.json actually changed
+        run: |
+          git config user.name "github-actions[bot]" # Configure Git user for the bot
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json # Stage the changed data.json
+          git commit -m "Auto-generate data.json with updated image paths [skip ci]" # Commit with a message
+          git push # Push the changes to GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Use the GitHub token for authentication
