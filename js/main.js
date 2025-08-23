@@ -115,7 +115,7 @@ function init(imagePathsToLoad){
 
     const basePlaneSize = 1.5;
 
-    const baseCircleRadius = 0.9; // Base radius for CircleGeometry
+    const baseCircleRadius = 0.8; // Base radius for CircleGeometry
 
     scene.background = new THREE.Color(0xf4f4f4);
     scene.fog = new THREE.Fog(0xf4f4f4, radius * 0.8, radius * 2.5);

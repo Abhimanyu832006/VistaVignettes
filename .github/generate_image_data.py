@@ -4,7 +4,7 @@ import os
 import json
 
 # Define the path to your images folder relative to the repository root
-IMAGES_DIR = 'images'
+IMAGES_DIR = 'images/sphere'
 # Define the path where the JSON file will be generated
 OUTPUT_JSON_PATH = 'data.json'
 
@@ -15,7 +15,7 @@ def generate_image_paths_json():
         # Iterate over all files in the images directory
         for filename in os.listdir(IMAGES_DIR):
             # Construct the full path to the image
-            full_path = os.path.join(IMAGES_DIR, filename)
+            full_path = f"{IMAGES_DIR}/{filename}"
             # Check if it's actually a file and a common image type
             if os.path.isfile(full_path) and filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
                 image_paths.append(full_path.replace('\\', '/')) # Use forward slashes for web paths
