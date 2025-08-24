@@ -3,7 +3,11 @@ let imageModal, modalImage, modalImageTitle, modalImageDescription, modalDownloa
 
 async function loadGalleryImages() {
     try {
-        const response = await fetch('./gallery_data.json'); // Fetch from gallery_data.json
+        // Dynamically construct the base path for GitHub Pages project sites
+        const basePath = window.location.pathname.includes('/VistaVignettes/') 
+            ? '/VistaVignettes/' 
+            : '/'; // Use '/' for local development if not in subpath
+            const response = await fetch(`${basePath}gallery_data.json`); // Corrected dynamic path // Fetch from gallery_data.json
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
