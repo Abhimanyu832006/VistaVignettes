@@ -306,7 +306,7 @@ function onClick(event) {
 document.addEventListener('DOMContentLoaded', async function(){
     try {
         // --- NEW: Fetch image paths from data.json ---
-        const response = await fetch('/Wallpapersite/sphere_data.json'); // Fetch the JSON file
+        const response = await fetch('sphere_data.json'); // Fetch the JSON file
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
