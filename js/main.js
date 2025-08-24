@@ -8,28 +8,54 @@ let canvas;
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 const rotationSpeed = 0.005;
+let mouseMovedThreshold = 5; 
+let mouseMovedDuringClick = false;
 const minScale = 0.6; 
 const maxScale = 0.8;
 
-
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 
 
 function onMouseDown(event) {
+    mouseMovedDuringClick = false;
     if (canvas) { 
         isDragging = true; 
         previousMousePosition = {
             x: event.clientX, 
             y: event.clientY 
         };
-        event.preventDefault(); 
+        event.preventDefault();
+        canvas.style.cursor = 'grabbing';
     }
 }
 
 function onMouseUp(event) {
     isDragging = false; 
+    canvas.style.cursor = 'grab';
 }
 
 function onMouseMove(event) {
+
+    if (isDragging && !mouseMovedDuringClick) {
+        const deltaX = event.clientX - previousMousePosition.x;
+        const deltaY = event.clientY - previousMousePosition.y;
+        if (Math.abs(deltaX) > mouseMovedThreshold || Math.abs(deltaY) > mouseMovedThreshold) {
+            mouseMovedDuringClick = true; // Mark as a drag
+        }
+    }
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(sphereGroup.children);
+
+    if (intersects.length > 0) {
+        canvas.style.cursor = 'pointer'; // Change cursor to pointer if hovering over an image
+    } else {
+        canvas.style.cursor = 'grab'; // Default cursor when not hovering over an image
+    }
+
     if (!isDragging) return; 
 
     const deltaX = event.clientX - previousMousePosition.x; 
@@ -215,7 +241,7 @@ function init(imagePathsToLoad){
         canvas: canvas,
         antialias: true
     });
-    renderer.setPixelRatio(window.devicePixelRatio);        
+    renderer.setPixelRatio(window.devicePixelRatio); 
     renderer.setSize(width, height);
 
     canvas.addEventListener('mousedown', onMouseDown);
@@ -224,8 +250,9 @@ function init(imagePathsToLoad){
     canvas.addEventListener('mouseleave', onMouseUp);
 
     canvas.addEventListener('touchstart', onTouchStart); 
-    canvas.addEventListener('touchend', onTouchEnd);     
+    canvas.addEventListener('touchend', onTouchEnd); 
     canvas.addEventListener('touchmove', onTouchMove);
+    canvas.addEventListener('click', onClick, false);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
     scene.add(ambientLight);
@@ -245,10 +272,41 @@ function animate(){
     }
 }
 
+function onClick(event) {
+
+    if (mouseMovedDuringClick) {
+        console.log("DEBUG: Click ignored because it was part of a drag.");
+        return; // Do not navigate if it was a drag
+    }
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1; 
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(sphereGroup.children);
+
+    if (intersects.length > 0) {
+
+        window.location.href = 'gallery.html'; 
+    }
+
+    const originalColor = clickedObject.material.color.getHex(); 
+        clickedObject.material.color.set(0x007bff);
+        clickedObject.material.needsUpdate = true; 
+
+        
+        setTimeout(() => {
+            clickedObject.material.color.set(originalColor);
+            clickedObject.material.needsUpdate = true;
+            window.location.href = 'gallery.html';
+        }, 200);
+}
+
 document.addEventListener('DOMContentLoaded', async function(){
     try {
         // --- NEW: Fetch image paths from data.json ---
-        const response = await fetch('data.json'); // Fetch the JSON file
+        const response = await fetch('/Wallpapersite/sphere_data.json'); // Fetch the JSON file
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
