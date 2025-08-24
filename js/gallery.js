@@ -3,7 +3,7 @@ let imageModal, modalImage, modalImageTitle, modalImageDescription, modalDownloa
 
 async function loadGalleryImages() {
     try {
-        const response = await fetch('/VistaVignettes/gallery_data.json'); // Fetch from gallery_data.json
+        const response = await fetch('./gallery_data.json'); // Fetch from gallery_data.json
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
