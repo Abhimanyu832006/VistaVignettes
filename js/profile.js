@@ -1,17 +1,14 @@
-// Global variables for the modal, user state
+// js/profile.js
+
+// Global variables for modals, user state (Copied from gallery.js)
 let imageModal, modal, modalImage, modalImageTitle, modalImageDescription, modalDownloadButton, closeButton, modalFavoriteIcon;
 let loggedInUser = null; 
-
-// =========================================================
-// NEW: Authentication Variables and Functions (Copied from main.js)
-// =========================================================
 let isRegisterMode = false;
 let authModal, authButton, authForm, authTitle, authSubmit, registerFields, authToggleLink, authMessage;
 
 
-/**
- * Fetches the login status from the server (api/get_session.php) and updates UI.
- */
+// --- AUTHENTICATION & SESSION FUNCTIONS (Copied from gallery.js) ---
+
 async function checkLoginStatus() {
     try {
         const response = await fetch('api/get_session.php');
@@ -23,36 +20,31 @@ async function checkLoginStatus() {
                 username: data.username 
             };
             updateAuthUI(true); 
+            return true; // Return true to signal successful login
         } else {
             loggedInUser = null;
             updateAuthUI(false); 
+            return false;
         }
     } catch(e) {
-        console.warn("Could not check session status for Gallery.");
+        console.warn("Could not check session status for Profile.");
         loggedInUser = null;
         updateAuthUI(false);
+        return false;
     }
 }
 
-/**
- * Updates the header button text/action based on login status.
- */
 function updateAuthUI(isLoggedIn) {
     if (!authButton) return;
 
     if (isLoggedIn) {
-        // --- MODIFIED LOGIC ---
-        // Change button text to show username
         authButton.innerHTML = `<span class="material-symbols-outlined">account_circle</span> ${loggedInUser.username}`;
-        
-        // Change button action to navigate to profile.html
         authButton.removeEventListener('click', openAuthModal);
-        authButton.removeEventListener('click', handleLogout); // Ensure no residual logout listener
+        authButton.removeEventListener('click', handleLogout); 
         authButton.addEventListener('click', () => {
-             window.location.href = 'profile.html'; // Navigate to the new page
+             // Already on profile page, so clicking logs out
+             handleLogout(); 
         }); 
-        
-        // Add a long-press/right-click listener to allow logout from the profile button itself
         authButton.oncontextmenu = (e) => {
             e.preventDefault();
             if(confirm("Log out of VistaVignettes?")) {
@@ -61,20 +53,16 @@ function updateAuthUI(isLoggedIn) {
         };
 
     } else {
-        // --- ORIGINAL LOGIN LOGIC ---
         authButton.innerHTML = `<span class="material-symbols-outlined">person</span>`;
         authButton.removeEventListener('click', handleLogout);
-        authButton.removeEventListener('click', openAuthModal); // Remove any residual listener first
+        authButton.removeEventListener('click', openAuthModal);
         authButton.addEventListener('click', openAuthModal);
-        authButton.oncontextmenu = null; // Remove context menu on log out
+        authButton.oncontextmenu = null; 
     }
 }
 
 function openAuthModal() {
-    if (!authModal) {
-        console.error("Authentication modal element not found.");
-        return;
-    }
+    if (!authModal) { console.error("Authentication modal element not found."); return; }
     setFormMode('login');
     authModal.style.display = 'flex';
     authModal.classList.remove('close');
@@ -84,10 +72,8 @@ function openAuthModal() {
 
 function closeAuthModal() {
     if (!authModal) return;
-
     authModal.classList.remove('open');
     authModal.classList.add('close');
-    
     const onAnimationEnd = () => {
         if (authModal.classList.contains('close')) {
             authModal.style.display = 'none';
@@ -105,7 +91,7 @@ function setFormMode(mode) {
     authTitle.textContent = isRegisterMode ? "Create Your VistaVignettes Account" : "Log In to VistaVignettes";
     authSubmit.textContent = isRegisterMode ? "Register" : "Log In";
     registerFields.style.display = isRegisterMode ? 'block' : 'none';
-    authToggleLink.innerHTML = isRegisterMode ? "Already have an account? <strong>LOG IN</strong>" : "Need an account? <strong>Sign Up</strong>";
+    authToggleLink.innerHTML = isRegisterMode ? "Already have an account? <strong>Log In</strong>" : "Need an account? <strong>Register</strong>";
     authMessage.textContent = ''; 
 }
 
@@ -114,31 +100,16 @@ function toggleFormMode(e) {
     setFormMode(isRegisterMode ? 'login' : 'register');
 }
 
-/**
- * Handles form submission for both Login and Register.
- */
 async function handleAuthSubmit(e) {
     e.preventDefault();
     authMessage.textContent = ''; 
-
     const usernameInput = document.getElementById('auth-username').value.trim();
     const passwordInput = document.getElementById('auth-password').value;
     const emailInput = document.getElementById('register-email')?.value.trim();
-
-    console.log("DEBUG: Username:", usernameInput);
-    console.log("DEBUG: Password Length:", passwordInput.length);
-    console.log("DEBUG: Email:", emailInput);
-
     let apiUrl = isRegisterMode ? 'api/register.php' : 'api/login.php';
-    let data = {
-        username: usernameInput,
-        password: passwordInput
-    };
+    let data = { username: usernameInput, password: passwordInput };
     if (isRegisterMode) {
-        if (!emailInput) {
-             authMessage.textContent = "Email is required for registration.";
-             return;
-        }
+        if (!emailInput) { authMessage.textContent = "Email is required for registration."; return; }
         data.email = emailInput;
     }
     
@@ -152,35 +123,25 @@ async function handleAuthSubmit(e) {
 
         if (response.ok && (response.status === 200 || response.status === 201)) {
             authMessage.style.color = 'green';
-            authMessage.textContent = result.message || (isRegisterMode ? "Registration successful!" : "Login successful!");
-            
+            authMessage.textContent = result.message || "Success!";
             if (!isRegisterMode) {
                 loggedInUser = { id: result.user_id, username: result.username };
                 updateAuthUI(true); 
             }
-            
             setTimeout(() => {
                 closeAuthModal();
-                // Reload to refresh gallery content with personalized favorite status
                 if (!isRegisterMode) window.location.reload(); 
             }, 1000);
-
         } else {
             authMessage.style.color = 'red';
-            authMessage.textContent = result.message || `Authentication failed: ${response.statusText}`;
+            authMessage.textContent = result.message || `Authentication failed.`;
         }
-
     } catch (e) {
         authMessage.style.color = 'red';
         authMessage.textContent = "Network error or server connection failed.";
-        console.error("Auth Fetch Error:", e);
     }
 }
 
-
-/**
- * Handles the Logout API call.
- */
 async function handleLogout() {
     try {
         const response = await fetch('api/logout.php');
@@ -188,35 +149,61 @@ async function handleLogout() {
             loggedInUser = null;
             updateAuthUI(false);
             alert("Logged out successfully.");
-            window.location.reload(); 
+            window.location.href = 'index.html'; // Redirect to home page after logout
         } else {
-            alert("Logout failed. Please try clearing cookies.");
+            alert("Logout failed.");
         }
     } catch (e) {
         console.error("Logout Fetch Error:", e);
-        alert("Network error during logout.");
     }
 }
 
+// --- CORE GALLERY FUNCTIONS (Adapted for Profile) ---
+
+async function forceDownload(imageURL, imageId) {
+    try {
+        await fetch('api/log_download.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image_id: imageId })
+        });
+        
+        const response = await fetch(imageURL);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const filename = imageURL.split('/').pop(); 
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+    } catch (e) {
+        console.error("Error during download:", e);
+        alert("Could not download the image. Please try again.");
+    }
+}
 
 /**
- * Toggles the favorite status for a given image ID.
+ * Toggles the favorite status (and reloads the profile page if unfavorited)
  */
 async function toggleFavorite(imageId, heartElement) {
+    // Check if user is logged in
     if (!loggedInUser) {
         openAuthModal();
         return;
     }
-
-    // Get current state
+    
     const isCurrentlyFavorited = heartElement.classList.contains('favorited');
+    console.log(`Profile: Toggling favorite for image ${imageId}, currently favorited: ${isCurrentlyFavorited}`);
     
     try {
         const response = await fetch('api/toggle_favorite.php', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image_id: imageId })
         });
         const result = await response.json();
@@ -229,13 +216,18 @@ async function toggleFavorite(imageId, heartElement) {
         if (result.status === "added") {
             heartElement.textContent = 'favorite';
             heartElement.classList.add('favorited');
-            console.log("Added to favorites");
+            console.log("Profile: Added to favorites");
         } else if (result.status === "removed") {
             heartElement.textContent = 'favorite_border';
             heartElement.classList.remove('favorited');
-            console.log("Removed from favorites");
+            console.log("Profile: Removed from favorites");
+            
+            // CRITICAL FOR PROFILE PAGE: If the user unfavorites an image, reload the grid
+            setTimeout(() => {
+                loadProfileImages(loggedInUser.id);
+            }, 300);
         }
-
+        
     } catch (e) {
         alert(`Error: ${e.message}`);
         console.error("Favorite toggle error:", e);
@@ -243,46 +235,12 @@ async function toggleFavorite(imageId, heartElement) {
 }
 
 
-// =========================================================
-// EXISTING & UPDATED: Core Gallery Functions
-// =========================================================
-
-async function forceDownload(imageURL, imageId) { // Changed filename to imageId for clean logging
-    try {
-        // Log download before initiating the file transfer
-        await fetch('api/log_download.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image_id: imageId })
-        });
-        
-        // Existing download logic
-        const response = await fetch(imageURL);
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const filename = imageURL.split('/').pop(); // Get filename from URL
-
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-    } catch (e) {
-        console.error("Error during download:", e);
-        alert("Could not download the image. Please try again.");
-    }
-}
-
-// Function to fetch images from the API (with optional search filter)
-async function loadGalleryImages(api_url = '/Wallpapersite/api/get_images.php?is_sphere_image=0') {
-    if (!api_url.includes('is_sphere_image')) {
-        api_url += (api_url.includes('?') ? '&' : '?') + 'is_sphere_image=0';
-    }
-
+/**
+ * NEW CORE FUNCTION: Fetches and displays only the user's favorited images.
+ */
+async function loadProfileImages(userId) {
+    const api_url = `/Wallpapersite/api/get_images.php?is_sphere_image=0&is_favorited=1&user_id=${userId}`;
+    
     try {
         const response = await fetch(api_url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -290,16 +248,15 @@ async function loadGalleryImages(api_url = '/Wallpapersite/api/get_images.php?is
 
         const allImages = data.imagePaths;
         const galleryGrid = document.getElementById('gallery-grid');
+        const profileTitle = document.getElementById('profile-title');
 
-        if (!galleryGrid) {
-            console.error("Gallery grid element not found!");
-            return;
-        }
+        if (!galleryGrid || !profileTitle) return;
 
+        profileTitle.textContent = `${loggedInUser.username}'s Favorites`;
         galleryGrid.innerHTML = '';
 
         if (!allImages || allImages.length === 0) {
-            galleryGrid.innerHTML = '<p>No images found. Try a different search term or check the image database.</p>';
+            galleryGrid.innerHTML = '<p>You haven\'t added any wallpapers to your favorites yet. Go to the <a href="gallery.html">Gallery</a> to save some!</p>';
             return;
         }
 
@@ -308,43 +265,30 @@ async function loadGalleryImages(api_url = '/Wallpapersite/api/get_images.php?is
             galleryItem.className = 'gallery-item';
 
             const fullImageUrl = image.path;
-            const imageName = image.name;
-            const imageId = image.id; // Get ID for tracking
+            const imageId = image.id; 
 
+            // Image, Icons, and Buttons creation (similar to gallery.js)
             const img = document.createElement('img');
             img.src = fullImageUrl;
-            img.alt = imageName;
+            img.alt = image.name;
             img.loading = 'lazy';
             
-            // Favorites Icon Element
             const favoriteIcon = document.createElement('span');
-            favoriteIcon.className = 'favorite-icon material-symbols-outlined';
+            favoriteIcon.className = 'favorite-icon material-symbols-outlined favorited';
+            favoriteIcon.textContent = 'favorite'; // Always filled on the profile page since these are favorites
             
-            // Ensure is_favorited is explicitly checked as 1, not just truthy
-            const isFavorited = image.is_favorited === 1;
-            favoriteIcon.textContent = isFavorited ? 'favorite' : 'favorite_border';
-            
-            if (isFavorited) {
-                favoriteIcon.classList.add('favorited');
-            } else {
-                favoriteIcon.classList.remove('favorited');
-            }
-
             // Event listener to toggle favorite status
             favoriteIcon.addEventListener('click', (event) => {
-                event.stopPropagation(); // Prevent modal from opening
+                event.stopPropagation();
+                // Since this is the profile page, unfavoriting reloads the grid
                 toggleFavorite(imageId, favoriteIcon);
             });
             
-
-            // Gallery download button (existing logic)
             const downloadButton = document.createElement('a');
             downloadButton.className = 'download-button';
             downloadButton.textContent = 'Download';
-            
             downloadButton.addEventListener('click', (event) => {
                 event.preventDefault();
-                // Pass image ID to log download
                 forceDownload(fullImageUrl, imageId); 
             });
 
@@ -352,23 +296,23 @@ async function loadGalleryImages(api_url = '/Wallpapersite/api/get_images.php?is
             galleryItem.appendChild(favoriteIcon); 
             galleryItem.appendChild(downloadButton);
             
-            // Bind click listener to the entire galleryItem (the card)
             galleryItem.addEventListener('click', () => {
-                openModal(imageId, fullImageUrl, imageName, image.description, image.is_favorited);
+                openModal(imageId, fullImageUrl, image.name, image.description, true); // Always favorited on profile page
             });
 
             galleryGrid.appendChild(galleryItem);
         });
 
     } catch (e) {
-        console.error("Error loading gallery images:", e);
+        console.error("Error loading profile images:", e);
         const galleryGrid = document.getElementById('gallery-grid');
         if (galleryGrid) {
-            galleryGrid.innerHTML = `<p>Error loading images: ${e.message}</p>`;
+            galleryGrid.innerHTML = `<p>Error fetching your favorites. Please try again later.</p>`;
         }
     }
 }
 
+// --- MODAL FUNCTIONS ---
 
 function openModal(imageId, imageSrc, title, description, isFavorited) {
     if (!imageModal || !modalImage) return;
@@ -405,7 +349,6 @@ function openModal(imageId, imageSrc, title, description, isFavorited) {
         });
     }
 
-
     const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.paddingRight = scrollBarWidth + 'px';
     document.body.style.overflow = 'hidden';
@@ -432,7 +375,7 @@ function closeModal() {
     }
 }
 
-// Handler for the modal download button (dummy handler to remove previous listeners)
+// Handler for the modal download button (dummy handler)
 function modalDownloadHandler(event) {
     event.preventDefault();
 }
@@ -442,7 +385,8 @@ function modalFavoriteHandler(event) {
     event.preventDefault(); 
 }
 
-window.addEventListener("load", async () => {
+// --- DOM Content Loaded Initialization ---
+document.addEventListener('DOMContentLoaded', async function(){
     
     // 1. Authentication UI Initialization
     authModal = document.getElementById('auth-modal');
@@ -453,11 +397,25 @@ window.addEventListener("load", async () => {
     registerFields = document.getElementById('register-fields');
     authToggleLink = document.getElementById('toggle-register');
     authMessage = document.getElementById('auth-message');
-    // Note: We need a unique selector for the auth close button to avoid conflict
     const closeAuthButton = document.querySelector('.close-auth-button'); 
     
-    // Check login status first (will run updateAuthUI)
-    await checkLoginStatus(); 
+    const isAuthenticated = await checkLoginStatus(); 
+
+    // --- ENFORCE LOGIN ---
+    if (!isAuthenticated) {
+        document.querySelector('main').innerHTML = `
+            <section class="gallery-section" style="padding: 100px 0;">
+                <h2>Access Denied</h2>
+                <p>Please log in to view your personalized profile.</p>
+                <button class="download-button" style="width: 200px; margin-top: 20px;" onclick="document.getElementById('auth-button').click()">Log In</button>
+            </section>
+        `;
+        // Open modal automatically for better UX
+        setTimeout(openAuthModal, 50); 
+        return;
+    }
+    // --- END ENFORCE LOGIN ---
+
 
     // Authentication Event Listeners
     if (closeAuthButton) {
@@ -480,18 +438,15 @@ window.addEventListener("load", async () => {
         authForm.addEventListener('submit', handleAuthSubmit);
     }
     
-    // 2. Gallery Modal Initialization (Existing)
+    // 2. Image Modal Initialization
     imageModal = document.getElementById('image-modal');
-    // NOTE: If you have an Auth Modal on the page, the image modal should have a unique selector, e.g., #image-modal.
-    // Assuming you kept the class 'modal' on the image modal container:
     modal = imageModal; // Use imageModal itself if it represents the overall container
     modalImage = document.getElementById('modal-image');
     modalImageTitle = document.getElementById('modal-image-title');
     modalImageDescription = document.getElementById('modal-image-description');
     modalDownloadButton = document.getElementById('modal-download-button');
     modalFavoriteIcon = document.getElementById('modal-favorite-icon');
-    // Use a specific selector for the image modal's close button if possible, otherwise rely on CSS class structure
-    closeButton = imageModal ? imageModal.querySelector('.close-button:not(.close-auth-button)') : null; 
+    closeButton = imageModal ? imageModal.querySelector('.close-button:not(.close-auth-button)') : null;
 
     if (closeButton) {
         closeButton.addEventListener('click', closeModal);
@@ -500,44 +455,17 @@ window.addEventListener("load", async () => {
         imageModal.addEventListener('click', (event) => {
             if (event.target === imageModal) closeModal();
         });
-    }
-
-    const searchInput = document.querySelector('.search-input');
-    const searchForm = document.querySelector('.search-bar');
-
-    const loadWithSearchTerm = (term) => {
-        let api_url = '/Wallpapersite/api/get_images.php';
-        if (term) {
-            api_url += `?search_term=${encodeURIComponent(term)}`;
-        }
-        api_url += (api_url.includes('?') ? '&' : '?') + 'is_sphere_image=0';
-
-        loadGalleryImages(api_url);
-    };
-
-    const runSearch = () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const term = urlParams.get('search_term') || "";
-        if (searchInput) searchInput.value = term;
-        loadWithSearchTerm(term);
-    };
-
-    setTimeout(runSearch, 50);
-
-    // Local search without reload (Existing)
-    if (searchForm) {
-        searchForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const term = searchInput.value.trim();
-
-            const newUrl = `${window.location.pathname}?search_term=${encodeURIComponent(term)}`;
-            window.history.pushState({ path: newUrl }, '', newUrl);
-
-            runSearch();
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && imageModal.style.display === 'flex') {
+                closeModal();
+            }
         });
     }
-
-    window.addEventListener('popstate', runSearch);
-
+    
+    // 3. Profile Content Initialization
+    
+    // Start loading the user's favorites
+    loadProfileImages(loggedInUser.id);
     
 });

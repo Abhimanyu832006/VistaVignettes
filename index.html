@@ -16,23 +16,22 @@
             <div class="logo">
                 <h1><a href="index.html">VistaVignettes</a></h1>
             </div>
-
+            
             <div class="navigation-bar"> 
                 <nav>
                     <ul>
-                        <li><a href="index.html">Home</a></li>
+                        <li class="active-page"><a href="index.html">Home</a></li>
                         <li><a href="gallery.html">Gallery</a></li>
                         <li><a href="about.html">About Us</a></li>
                     </ul>
                 </nav>
             </div>
+            
+            <button id="auth-button" class="auth-button logo" aria-label="Account">
+                <span class="material-symbols-outlined">person</span>
+            </button>
 
-            <div class="search-bar">
-                <button class="search-icon-button" aria-label="Search"> 
-                    <span class="search-icon material-symbols-outlined">search</span>
-                </button>
-                <input class="search-input" type="search" placeholder="Search..."> 
-            </div>
+
         </header>
 
         <main>
@@ -43,10 +42,10 @@
             <div class="footer-section">
                 <h5>Info</h5>
                 <ul>
-                    <li><a href="#">About Us</a></li>
+                    <li><a href="about.html">About Us</a></li>
                     <li><a href="#">Terms of Service</a></li>
                     <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Contact</a></li>
+                    <li><a href="contact.html">Contact</a></li>
                 </ul>
             </div>
 
@@ -54,7 +53,7 @@
                 <h5>Follow Us on:</h5>
                 <ul>
                     <li><a href="https://www.facebook.com/" target="_blank">Facebook</a></li>
-                    <li><a href="https://www.instagram.com/vista_vignettes/" target="_blank">Instagram</a></li>
+                    <li><a href="https://www.instagram.com/vistavignettes_in?utm_source=ig_web_button_share_sheet&igsh=MXVxeWZqNzdvNHQ3cA==" target="_blank">Instagram</a></li>
                     <li><a href="https://threads.net/" target="_blank">Threads</a></li>
                 </ul>
             </div>
@@ -65,5 +64,47 @@
         </footer>
     </div>
     <script type="module" src="js/main.js"></script>
+
+    <div id="auth-modal" class="modal">
+        <div class="modal-content auth-content">
+            <span class="close-auth-button close-button">&times;</span>
+            <div class="modal-body auth-body">
+                
+                <div class="modal-info auth-form-container">
+                    <h3 id="auth-title">Log In to VistaVignettes</h3>
+                    <form id="auth-form" class="contact-form">
+                        <div id="register-fields" style="display:none;">
+                            <div class="form-group">
+                                <label for="register-email">Email</label>
+                                <input type="email" id="register-email" name="email" >
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="auth-username" placeholder="Enter Your Username or Email">Username or Email</label>
+                            <input type="text" id="auth-username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="auth-password" placeholder="Enter Your Password">Password</label>
+                            <input type="password" id="auth-password" name="password" required>
+                        </div>
+                        <p id="auth-message" class="error-message" style="color: red; margin-bottom: 15px;"></p>
+                        <button type="submit" id="auth-submit" class="download-button" style="width: 100%;">Log In</button>
+                    </form>
+                    
+                    <p class="auth-toggle">
+                        <a href="#" id="toggle-register">Need an account? - <strong>Sign Up</strong> </a>
+                    </p>
+                    
+                </div>
+                
+                <div class="auth-branding">
+                    <p>Welcome to your personal curation space!</p>
+                    <span class="material-symbols-outlined large-icon">account_circle</span>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VistaVignettes</title>
+    <title>Contact VistaVignettes</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
-    
 </head>
 <body>
    
     <div class="container">
-        <header class="gallery-header">
+        <header>
             <div class="logo">
                 <h1><a href="index.html">VistaVignettes</a></h1>
             </div>
@@ -20,79 +19,81 @@
             <div class="navigation-bar"> 
                 <nav>
                     <ul>
-                        <li><a href="index.html">Home</a></li>
+                        <li class="active-page"><a href="index.html">Home</a></li>
                         <li class="active-page"><a href="gallery.html">Gallery</a></li>
-                        <li><a href="about.html">About Us</a></li>
+                        <li class="active-page"><a href="about.html">About Us</a></li>
                     </ul>
                 </nav>
             </div>
-            
-            <button id="auth-button" class="auth-button logo gallery-auth-button" aria-label="Account">
+
+
+            <button id="auth-button" class="auth-button logo" aria-label="Account">
                 <span class="material-symbols-outlined">person</span>
             </button>
 
-            <form class="search-bar gallery-search-bar" action="/Wallpapersite/gallery.html" method="get">
+
+            <form class="search-bar" action="gallery.html" method="GET">
                 <button type="submit" class="search-icon-button" aria-label="Search"> 
                     <span class="search-icon material-symbols-outlined">search</span>
                 </button>
-                <input class="search-input" name="search_term" type="search" placeholder="Search..."> 
+                <input class="search-input" type="search" name="search_term" placeholder="Search..."> 
             </form>
         </header>
-        
-        <main>
-            <section class="gallery-section">
-                <h2><a href="gallery.html">All Wallpapers</a></h2>
-                <div id="gallery-grid" class="image-grid">
-                    <!-- Images will be dynamically loaded here -->
-                    <p>Loading images...</p>
-                </div>
+
+        <main class="contact-main">
+            <section class="contact-card glass-panel">
+                <h2>Contact Us</h2>
+                <p>Have a question about our wallpapers or technology? Fill out the form below!</p>
+
+                <form class="contact-form" action="Wallpapersite/api/send_email.php" method="POST">
+                    <div class="form-group">
+                        <label for="name">Your Name :</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Your Email :</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Message / Feedback :</label>
+                        <textarea id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="download-button">Send Message</button>
+                </form>
             </section>
         </main>
 
         <footer>
             <div class="footer-section">
-                <h5>Info</h5>
-                <ul>
-                    <li><a href="about.html">About Us</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-            </div>
+            <h5>Info</h5>
+            <ul>
+                <li><a href="about.html">About Us</a></li>
+                <li><a href="#">Terms of Service</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </div>
 
-            <div class="footer-section">
-                <h5>Follow Us on:</h5>
-                <ul>
-                    <li><a href="https://www.facebook.com/" target="_blank">Facebook</a></li>
-                    <li><a href="https://www.instagram.com/vistavignettes_in?utm_source=ig_web_button_share_sheet&igsh=MXVxeWZqNzdvNHQ3cA==" target="_blank">Instagram</a></li>
-                    <li><a href="https://threads.net/" target="_blank">Threads</a></li>
-                </ul>
-            </div>
+        <div class="footer-section">
+            <h5>Follow Us on:</h5>
+            <ul>
+                <li><a href="https://www.facebook.com/" target="_blank">Facebook</a></li>
+                <li><a href="https://www.instagram.com/vistavignettes_in?utm_source=ig_web_button_share_sheet&igsh=MXVxeWZqNzdvNHQ3cA==" target="_blank">Instagram</a></li>
+                <li><a href="https://threads.net/" target="_blank">Threads</a></li>
+            </ul>
+        </div>
 
-            <div class="copyright">
-                <p>&copy; 2025 VistaVignettes. All rights reserved.</p>
-            </div>
+        <div class="copyright">
+            <p>&copy; 2025 VistaVignettes. All rights reserved.</p>
+        </div>
         </footer>
     </div>
-    <div id="image-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <div class="modal-body">
-                <img id="modal-image" src="" alt="Wallpaper Image">
-                <div class="modal-info">
-                    <h3 id="modal-image-title"></h3>
-                    <p id="modal-image-description"></p>
-                    <div class="action-buttons">
-                        <span id="modal-favorite-icon" class="favorite-icon material-symbols-outlined">favorite_border</span>
-                        <a id="modal-download-button" class="download-button" download>Download</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script type="module" src="js/gallery.js"></script>
-
-    <div id="auth-modal" class="modal">
+    <script src="js/contact.js"></script>
+    
+     <div id="auth-modal" class="modal">
         <div class="modal-content auth-content">
             <span class="close-auth-button close-button">&times;</span>
             <div class="modal-body auth-body">

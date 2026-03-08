@@ -8,14 +8,222 @@ let canvas;
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 const rotationSpeed = 0.005;
-let mouseMovedThreshold = 5; 
+let mouseMovedThreshold = 8; 
 let mouseMovedDuringClick = false;
-const minScale = 0.6; 
-const maxScale = 0.8;
+const minScale = 0.9; 
+const maxScale = 1.0;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+
+// =========================================================
+// NEW: Authentication Variables and Functions
+// =========================================================
+let isRegisterMode = false;
+let authModal, authButton, authForm, authTitle, authSubmit, registerFields, authToggleLink, authMessage;
+let loggedInUser = null; // Stores user object if logged in
+
+
+/**
+ * Fetches the login status from a utility endpoint (we'll assume one exists, 
+ * or check sessions if we were integrating server-side rendering).
+ * For this client-side JS, we rely on a cookie or local storage, but since 
+ * PHP sessions were implemented on the backend, we'll try a generic check.
+ */
+async function checkLoginStatus() {
+    // NOTE: Since PHP sessions are used, a simple client-side check is hard.
+    // For now, we will assume if the page loads, we check the session via a new API endpoint.
+    // We will create a simple 'api/get_session.php' in a moment, but for now:
+    try {
+        const response = await fetch('api/get_session.php');
+        const data = await response.json();
+        
+        if (data.logged_in) {
+            loggedInUser = { 
+                id: data.user_id, 
+                username: data.username 
+            };
+            updateAuthUI(true);
+        } else {
+            loggedInUser = null;
+            updateAuthUI(false);
+        }
+    } catch(e) {
+        console.warn("Could not check session status. Assuming logged out.");
+        loggedInUser = null;
+        updateAuthUI(false);
+    }
+}
+
+/**
+ * Updates the header button text/action based on login status.
+ */
+function updateAuthUI(isLoggedIn) {
+    if (!authButton) return;
+
+    if (isLoggedIn) {
+        // --- MODIFIED LOGIC ---
+        // Change button text to show username
+        authButton.innerHTML = `<span class="material-symbols-outlined">account_circle</span> ${loggedInUser.username}`;
+        
+        // Change button action to navigate to profile.html
+        authButton.removeEventListener('click', openAuthModal);
+        authButton.removeEventListener('click', handleLogout); // Ensure no residual logout listener
+        authButton.addEventListener('click', () => {
+             window.location.href = 'profile.html'; // Navigate to the new page
+        }); 
+        
+        // Add a long-press/right-click listener to allow logout from the profile button itself
+        authButton.oncontextmenu = (e) => {
+            e.preventDefault();
+            if(confirm("Log out of VistaVignettes?")) {
+                handleLogout();
+            }
+        };
+
+    } else {
+        // --- ORIGINAL LOGIN LOGIC ---
+        authButton.innerHTML = `<span class="material-symbols-outlined">person</span>`;
+        authButton.removeEventListener('click', handleLogout);
+        authButton.removeEventListener('click', openAuthModal); // Remove any residual listener first
+        authButton.addEventListener('click', openAuthModal);
+        authButton.oncontextmenu = null; // Remove context menu on log out
+    }
+}
+
+function openAuthModal() {
+    // Reset to Login view every time it opens
+    setFormMode('login');
+    authModal.style.display = 'flex';
+    authModal.classList.remove('close');
+    authModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAuthModal() {
+    authModal.classList.remove('open');
+    authModal.classList.add('close');
+    
+    const onAnimationEnd = () => {
+        if (authModal.classList.contains('close')) {
+            authModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            authModal.removeEventListener('animationend', onAnimationEnd);
+        }
+    };
+    authModal.addEventListener('animationend', onAnimationEnd);
+}
+
+function setFormMode(mode) {
+    isRegisterMode = (mode === 'register');
+    authTitle.textContent = isRegisterMode ? "Create Your VistaVignettes Account" : "Log In to VistaVignettes";
+    authSubmit.textContent = isRegisterMode ? "Register" : "Log In";
+    registerFields.style.display = isRegisterMode ? 'block' : 'none';
+    authToggleLink.innerHTML = isRegisterMode ? "Already have an account? <strong>LOG IN</strong>" : "Need an account? <strong>Sign Up</strong>";
+    authMessage.textContent = ''; // Clear message
+}
+
+function toggleFormMode(e) {
+    e.preventDefault();
+    setFormMode(isRegisterMode ? 'login' : 'register');
+}
+
+/**
+ * Handles form submission for both Login and Register.
+ */
+async function handleAuthSubmit(e) {
+    e.preventDefault();
+    authMessage.textContent = ''; 
+
+    const usernameInput = document.getElementById('auth-username').value.trim();
+    const passwordInput = document.getElementById('auth-password').value;
+    const emailInput = document.getElementById('register-email')?.value.trim();
+
+    // 1. Prepare data and API URL
+    let apiUrl = isRegisterMode ? 'api/register.php' : 'api/login.php';
+    let data = {
+        username: usernameInput,
+        password: passwordInput
+    };
+    if (isRegisterMode) {
+        if (!emailInput) {
+             authMessage.textContent = "Email is required for registration.";
+             return;
+        }
+        data.email = emailInput;
+    }
+    
+    // 2. Perform API Fetch
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+
+        // 3. Handle response
+        if (response.ok && response.status === 200 || response.status === 201) {
+            authMessage.style.color = 'green';
+            authMessage.textContent = result.message || (isRegisterMode ? "Registration successful!" : "Login successful!");
+            
+            // If successful login, update state
+            if (!isRegisterMode) {
+                loggedInUser = {
+                    id: result.user_id,
+                    username: result.username
+                };
+                updateAuthUI(true); // Update header button
+            }
+            
+            // Delay closing modal slightly after success
+            setTimeout(() => {
+                closeAuthModal();
+                // Reload page to refresh the three.js sphere if necessary, or just close modal
+                if (!isRegisterMode) window.location.reload(); 
+            }, 1000);
+
+        } else {
+            // Handle errors (400, 401, 409, 500)
+            authMessage.style.color = 'red';
+            authMessage.textContent = result.message || `Authentication failed: ${response.statusText}`;
+        }
+
+    } catch (e) {
+        authMessage.style.color = 'red';
+        authMessage.textContent = "Network error or server connection failed.";
+        console.error("Auth Fetch Error:", e);
+    }
+}
+
+
+/**
+ * Handles the Logout API call.
+ */
+async function handleLogout() {
+    try {
+        const response = await fetch('api/logout.php');
+        if (response.ok) {
+            loggedInUser = null;
+            updateAuthUI(false);
+            alert("Logged out successfully.");
+            window.location.reload(); // Reload to clear any user-specific content
+        } else {
+            alert("Logout failed. Please try clearing cookies.");
+        }
+    } catch (e) {
+        console.error("Logout Fetch Error:", e);
+        alert("Network error during logout.");
+    }
+}
+
+
+// =========================================================
+// EXISTING THREE.JS & Core Functions (Unchanged)
+// =========================================================
 
 function onMouseDown(event) {
     mouseMovedDuringClick = false;
@@ -26,7 +234,6 @@ function onMouseDown(event) {
             y: event.clientY 
         };
         event.preventDefault();
-        canvas.style.cursor = 'grabbing';
     }
 }
 
@@ -50,11 +257,20 @@ function onMouseMove(event) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(sphereGroup.children);
 
-    if (intersects.length > 0) {
-        canvas.style.cursor = 'pointer'; // Change cursor to pointer if hovering over an image
+    // --- CURSOR LOGIC REFINEMENT START ---
+    
+    if (isDragging) {
+        // If actively dragging, show the 'grabbing' (pinched hand) cursor.
+        canvas.style.cursor = 'grabbing';
+    } else if (intersects.length > 0) {
+        // If not dragging but hovering over an image, show 'pointer'.
+        canvas.style.cursor = 'pointer'; 
     } else {
-        canvas.style.cursor = 'grab'; // Default cursor when not hovering over an image
+        // Otherwise (not dragging, not hovering), show the 'grab' (normal hand) cursor.
+        canvas.style.cursor = 'grab'; 
     }
+
+    // --- CURSOR LOGIC REFINEMENT END ---
 
     if (!isDragging) return; 
 
@@ -129,7 +345,7 @@ function init(imagePathsToLoad){
     const height = canvas.clientHeight;
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f0f0);
+    scene.background = new THREE.Color(0xb2c7a2);
     
     sphereGroup = new THREE.Group();
     scene.add(sphereGroup);
@@ -143,8 +359,8 @@ function init(imagePathsToLoad){
 
     const baseCircleRadius = 0.8; // Base radius for CircleGeometry
 
-    scene.background = new THREE.Color(0xf4f4f4);
-    scene.fog = new THREE.Fog(0xf4f4f4, radius * 0.8, radius * 2.5);
+    scene.background = new THREE.Color(0xb2c7a2);
+    scene.fog = new THREE.Fog(0xb2c7a2, radius * 0.8, radius * 2.5);
 
     const backgroundSphereGeometry = new THREE.SphereGeometry(radius * 1.05, 64, 64);
     const backgroundSphereMaterial = new THREE.MeshBasicMaterial({
@@ -157,9 +373,9 @@ function init(imagePathsToLoad){
     scene.add(backgroundSphere);
 
     if(numImages>0){
-         imagePathsToLoad.forEach((path, index) => {
+         imagePathsToLoad.forEach((image, index) => {
 
-            textureLoader.load(path,
+            textureLoader.load(image.path,
                 (texture) => {
                     texture.flipY = false;
                     texture.needsUpdate = true;
@@ -204,7 +420,7 @@ function init(imagePathsToLoad){
                 },
                 undefined,
                 (err) => {
-                    console.error('An error happened loading image:', path, err);
+                    console.error('An error happened loading image:', image.path, err);
 
                     const placeholderTexture = textureLoader.load('https://placehold.co/200x200/AAAAAA/000000?text=Error');
                     const placeholderMaterial = new THREE.MeshBasicMaterial({ map: placeholderTexture, side: THREE.DoubleSide });
@@ -291,44 +507,94 @@ function onClick(event) {
         window.location.href = 'gallery.html'; 
     }
 
-    const originalColor = clickedObject.material.color.getHex(); 
-        clickedObject.material.color.set(0x007bff);
-        clickedObject.material.needsUpdate = true; 
-
-        
-        setTimeout(() => {
-            clickedObject.material.color.set(originalColor);
-            clickedObject.material.needsUpdate = true;
-            window.location.href = 'gallery.html';
-        }, 200);
 }
 
 document.addEventListener('DOMContentLoaded', async function(){
+    
+    // =========================================================
+    // NEW: Authentication Initialization and Event Listeners
+    // =========================================================
+    
+    authModal = document.getElementById('auth-modal');
+    authButton = document.getElementById('auth-button');
+    authForm = document.getElementById('auth-form');
+    authTitle = document.getElementById('auth-title');
+    authSubmit = document.getElementById('auth-submit');
+    registerFields = document.getElementById('register-fields');
+    authToggleLink = document.getElementById('toggle-register');
+    authMessage = document.getElementById('auth-message');
+    const closeAuthButton = document.querySelector('.close-auth-button');
+    
+    // Event listeners for the Authentication Modal
+    if (authButton) {
+        authButton.addEventListener('click', openAuthModal);
+    }
+    if (closeAuthButton) {
+        closeAuthButton.addEventListener('click', closeAuthModal);
+    }
+    if (authModal) {
+        // Close modal when clicking outside the content
+        authModal.addEventListener('click', (event) => {
+            if (event.target === authModal) closeAuthModal();
+        });
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && authModal.style.display === 'flex') {
+                closeAuthModal();
+            }
+        });
+    }
+    if (authToggleLink) {
+        authToggleLink.addEventListener('click', toggleFormMode);
+    }
+    if (authForm) {
+        authForm.addEventListener('submit', handleAuthSubmit);
+    }
+    
+    // Check login status on page load (essential for updating the header)
+    await checkLoginStatus(); 
+    
+    
+    // =========================================================
+    // EXISTING: Search and Three.js Initialization Logic
+    // =========================================================
+    
+    const searchForm = document.querySelector('.search-bar'); 
+    const searchInput = document.querySelector('.search-input');
+
+    if (searchForm) {
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault(); 
+            const searchTerm = searchInput.value;
+
+            // Redirects to the gallery page with the search term
+            window.location.href = `gallery.html?search_term=${encodeURIComponent(searchTerm)}`;
+        });
+    }
+
     try {
-        // --- NEW: Fetch image paths from data.json ---
-        const response = await fetch('sphere_data.json'); // Fetch the JSON file
+        // Pass the is_sphere_image flag (1) to get images for the home sphere
+        const response = await fetch('api/get_images.php?is_sphere_image=1'); 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json(); // Parse the JSON response
-        const fetchedImagePaths = data.imagePaths; // Get the array of paths
+        const data = await response.json(); 
+        const fetchedImagePaths = data.imagePaths; 
 
         if (!fetchedImagePaths || fetchedImagePaths.length === 0) {
-            console.error("Error: No image paths found in data.json or array is empty.");
-            // Optionally, display a message on the canvas or page
+            console.warn("No images found for the 3D sphere.");
             canvas = document.getElementById('threeJsCanvas');
-            if (canvas) canvas.style.display = 'none'; // Hide canvas if no images
+            if (canvas) canvas.style.display = 'none'; 
             document.body.innerHTML += '<h1>No images to display. Please add images to your project.</h1>';
             return;
         }
-        // --- END NEW ---
 
-        init(fetchedImagePaths); // Pass the fetched paths to init()
+        init(fetchedImagePaths); 
         animate();
     } catch(e) {
         console.error("Error during Three.js initialization or animation start:", e);
         canvas = document.getElementById('threeJsCanvas');
-        if (canvas) canvas.style.display = 'none'; // Hide canvas on error
+        if (canvas) canvas.style.display = 'none'; 
         document.body.innerHTML += `<h1>Error loading images: ${e.message}. Check console for details.</h1>`;
     }
 });
